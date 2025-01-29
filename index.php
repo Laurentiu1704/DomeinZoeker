@@ -18,6 +18,7 @@ require_once 'includes/cart-functions.php';
     <h1>Domein Zoeker</h1>
 </header>
 
+<!-- Zoekformulier -->
 <form method="post">
     <label for="domein">Domeinnaam:</label>
     <input type="text" name="domein" id="domein" required>
@@ -25,15 +26,19 @@ require_once 'includes/cart-functions.php';
 </form>
 
 <?php
+// Zorg ervoor dat $domeinenData altijd een waarde krijgt
+$domeinenData = [];
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['domein'])) {
     $domein = $_POST['domein'];
     $extensies = ['com', 'nl', 'org', 'net', 'eu', 'info', 'co', 'io', 'us', 'be'];
 
-    $domeinenData = [];
+    // Maak de domeinenData aan
     foreach ($extensies as $extensie) {
         $domeinenData[] = ['name' => $domein, 'extension' => $extensie];
     }
 
+    // Zoek de domeinen
     $resultaten = zoekDomeinen($domeinenData);
 
     if (isset($resultaten['error'])) {
@@ -43,9 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['domein'])) {
         foreach ($resultaten as $domein) {
             $status = $domein['status'] == 'free' ? 'Beschikbaar' : 'Niet beschikbaar';
             $prijs = isset($domein['price']) && is_numeric($domein['price']) ? (float) $domein['price'] : 0.00;
-            
+
             echo "<p>" . htmlspecialchars($domein['domain']) . " - " . $status . " (€" . number_format($prijs, 2) . ")</p>";
 
+            // Alleen toevoegen aan winkelmand als het domein beschikbaar is
             if ($domein['status'] == 'free') {
                 echo "
                 <form method='post'>
@@ -56,25 +62,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['domein'])) {
             }
         }
     }
+    echo "<pre>";
+    print_r($resultaten);
+    echo "</pre>";
+
 }
-
-
-if (isset($_POST['add_to_cart'])) {
-    if (!empty($_POST['domain']) && !empty($_POST['price'])) {
-        voegToeAanWinkelmand($_POST['domain'], $_POST['price']);
-        echo "<p style='color: green;'>Domein toegevoegd aan winkelmand!</p>";
-    }
-}
-
-$resultaten = zoekDomeinen($domeinenData);
-
-echo "<pre>";
-print_r($resultaten);
-echo "</pre>";
 
 ?>
 
-<h3><a href="checkout.php">Ga naar de checkout</a></h3>
 
 </body>
 </html>
